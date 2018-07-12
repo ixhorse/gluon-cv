@@ -1,4 +1,4 @@
-"""Utility functions."""
+"""GluonCV Utility functions."""
 from __future__ import absolute_import
 
 from .download import download
@@ -10,7 +10,7 @@ from . import viz
 from . import random
 from . import metrics
 
-from .lr_scheduler import PolyLRScheduler
+from .lr_scheduler import LRScheduler
 from .metrics.voc_segmentation import batch_pix_accuracy, batch_intersection_union
 from . import parallel
 

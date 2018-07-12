@@ -8,7 +8,7 @@ import mxnet as mx
 from mxnet import gluon, autograd
 from mxnet.gluon.data.vision import transforms
 
-from gluoncv.utils import PolyLRScheduler
+from gluoncv.utils import LRScheduler
 from gluoncv.model_zoo.segbase import *
 from gluoncv.utils.parallel import *
 from gluoncv.data import get_segmentation_dataset
@@ -59,6 +59,8 @@ def parse_args():
                         help='put the path to resuming file if needed')
     parser.add_argument('--checkname', type=str, default='default',
                         help='set the checkpoint name')
+    parser.add_argument('--model-zoo', type=str, default=None,
+                        help='evaluating on model zoo model')
     # evaluation only
     parser.add_argument('--eval', action='store_true', default= False,
                         help='evaluation only')
@@ -81,9 +83,6 @@ def parse_args():
         args.norm_layer = BatchNorm
     else:
         args.norm_layer = mx.gluon.nn.BatchNorm
-    # check resuming
-    if args.eval and args.resume is None:
-        raise RuntimeError('checkpoint must be provided for eval or test')
     return args
 
 
@@ -123,8 +122,8 @@ class Trainer(object):
         criterion = SoftmaxCrossEntropyLossWithAux(args.aux)
         self.criterion = DataParallelCriterion(criterion, args.ctx, args.syncbn)
         # optimizer and lr scheduling
-        self.lr_scheduler = PolyLRScheduler(args.lr, niters=len(self.train_data), 
-                                            nepochs=args.epochs)
+        self.lr_scheduler = LRScheduler(mode='poly', baselr=args.lr, niters=len(self.train_data), 
+                                        nepochs=args.epochs)
         kv = mx.kv.create(args.kvstore)
         self.optimizer = gluon.Trainer(self.net.module.collect_params(), 'sgd',
                                        {'lr_scheduler': self.lr_scheduler,

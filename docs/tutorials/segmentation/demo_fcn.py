@@ -1,7 +1,7 @@
 """1. Getting Started with FCN Pre-trained Models
 ==============================================
 
-This is a quick demo of using GluonCV FCN model.
+This is a quick demo of using GluonCV FCN model on PASCAL VOC dataset.
 Please follow the `installation guide <../index.html>`_ to install MXNet and GluonCV if not yet.
 """
 import mxnet as mx
@@ -47,7 +47,7 @@ model = gluoncv.model_zoo.get_model('fcn_resnet50_voc', pretrained=True)
 
 ##############################################################################
 # make prediction using single scale
-output = model.evaluate(img)
+output = model.demo(img)
 predict = mx.nd.squeeze(mx.nd.argmax(output, 1)).asnumpy()
 
 ##############################################################################

@@ -40,7 +40,7 @@ However, you can still load models by directly instantiate it like
 Summary of Available Models
 ---------------------------
 
-GluonCV is still under development, more models will be added later.
+GluonCV is still under development, stay tuned for more models!
 
 Image Classification
 ~~~~~~~~~~~~~~~~~~~~
@@ -55,30 +55,44 @@ Besides the listed, we provide more models trained on ImageNet in the upstream
 
 .. hint::
 
-    Training commands work with this script: :download:`Download train_imagenet.py<../../scripts/classification/imagenet/train_imagenet.py>`
+    Training commands work with this script:
+
+    :download:`Download train_imagenet.py<../../scripts/classification/imagenet/train_imagenet.py>`
+
+    The `resnet_v1b` family is a modified version of `resnet_v1`, specifically we set stride at the 3x3 layer for a bottleneck block. `ResNet18` and `ResNet34` have identical `v1` and `v1b` network structures. This modification has been mentioned in recent literatures, e.g. [8]_ .
 
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
 | Model                 | Top-1  | Top-5  | Training Command                                                                                                                   | Training Log                                                                                                                  |
 +=======================+========+========+====================================================================================================================================+===============================================================================================================================+
-| ResNet18_v1 [1]_      | 70.39  | 89.59  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v1.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v1.log>`_          |
+| ResNet18_v1 [1]_      | 70.93  | 89.92  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v1.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v1.log>`_          |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet34_v1 [1]_      | 74.11  | 91.84  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v1.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v1.log>`_          |
+| ResNet34_v1 [1]_      | 74.37  | 91.87  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v1.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v1.log>`_          |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet50_v1 [1]_      | 75.40  | 92.66  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v1.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v1.log>`_          |
+| ResNet50_v1 [1]_      | 76.47  | 93.13  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v1.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v1.log>`_          |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet101_v1 [1]_     | 76.93  | 93.34  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v1.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v1.log>`_         |
+| ResNet101_v1 [1]_     | 78.34  | 94.01  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v1.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v1.log>`_         |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet152_v1 [2]_     | 77.27  | 93.53  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v1.sh>`_      |                                                                                                                               |
+| ResNet152_v1 [1]_     | 79.00  | 94.38  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v1.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v1.log>`_         |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet18_v2 [3]_      | 70.37  | 89.62  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v2.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v2.log>`_          |
+| ResNet18_v1b [1]_     | 70.94  | 89.83  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v1b.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v1b.log>`_         |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet34_v2 [2]_      | 73.89  | 91.78  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v2.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v2.log>`_          |
+| ResNet34_v1b [1]_     | 74.65  | 92.08  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v1b.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v1b.log>`_         |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet50_v2 [2]_      | 76.22  | 92.97  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v2.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v2.log>`_          |
+| ResNet50_v1b [1]_     | 77.07  | 93.55  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v1b.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v1b.log>`_         |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet101_v2 [2]_     | 77.47  | 93.75  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v2.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v2.log>`_         |
+| ResNet101_v1b [1]_    | 78.81  | 94.39  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v1b.sh>`_     | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v1b.log>`_        |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
-| ResNet152_v2 [2]_     | 78.33  | 94.09  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v2.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v2.log>`_         |
+| ResNet152_v1b [1]_    | 79.44  | 94.61  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v1b.sh>`_     | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v1b.log>`_        |
++-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| ResNet18_v2 [2]_      | 71.00  | 89.92  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v2.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet18_v2.log>`_          |
++-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| ResNet34_v2 [2]_      | 74.40  | 92.08  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v2.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet34_v2.log>`_          |
++-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| ResNet50_v2 [2]_      | 77.11  | 93.43  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v2.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet50_v2.log>`_          |
++-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| ResNet101_v2 [2]_     | 78.53  | 94.17  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v2.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet101_v2.log>`_         |
++-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| ResNet152_v2 [2]_     | 79.21  | 94.31  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v2.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/resnet152_v2.log>`_         |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
 | MobileNetV2_1.0 [7]_  | 71.92  | 90.56  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/mobilenetv2_1.0.sh>`_   | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/classification/imagenet/mobilenetv2_1.0.log>`_      |
 +-----------------------+--------+--------+------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------+
@@ -133,8 +147,6 @@ Object Detection
 The following table lists pre-trained models for object detection
 and their performances.
 
-.. https://bit.ly/2qQHLl4
-
 .. hint::
 
   Model attributes are coded in their names.
@@ -146,25 +158,43 @@ and their performances.
 
   - ``vgg16_atrous`` is the type of base feature extractor network.
 
-  - ``voc`` is the training dataset.
+  - ``voc`` is the training dataset. You can choose ``voc`` or ``coco``, etc.
 
 .. hint::
 
   The training commands work with the following scripts:
 
   - For SSD networks: :download:`Download train_ssd.py<../../scripts/detection/ssd/train_ssd.py>`
-
-+------------------------------------+------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
-| Model                              | mAP  | Training Command                                                                                                                     | Training log                                                                                                                        |
-+====================================+======+======================================================================================================================================+=====================================================================================================================================+
-| ssd_300_vgg16_atrous_voc [5]_      | 77.6 | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_300_vgg16_atrous_voc.sh>`_          | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_300_vgg16_atrous_voc_train.log>`_           |
-+------------------------------------+------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
-| ssd_512_vgg16_atrous_voc [5]_      | 79.2 | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_vgg16_atrous_voc.sh>`_          | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_vgg16_atrous_voc_train.log>`_           |
-+------------------------------------+------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
-| ssd_512_resnet50_v1_voc [5]_       | 80.1 | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_resnet50_v1_voc.sh>`_           | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_resnet50_v1_voc_train.log>`_            |
-+------------------------------------+------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+  - For Faster-RCNN networks: :download:`Download train_faster_rcnn.py<../../scripts/detection/faster_rcnn/train_faster_rcnn.py>`
 
 
+.. https://bit.ly/2JLnI2R
+
++----------------------------------+-------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| Model                            | mAP   | Training Command                                                                                                                     | Training log                                                                                                                        |
++==================================+=======+======================================================================================================================================+=====================================================================================================================================+
+| ssd_300_vgg16_atrous_voc         | 77.6  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_300_vgg16_atrous_voc.sh>`_          | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_300_vgg16_atrous_voc_train.log>`_           |
++----------------------------------+-------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| ssd_512_vgg16_atrous_voc         | 79.2  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_vgg16_atrous_voc.sh>`_          | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_vgg16_atrous_voc_train.log>`_           |
++----------------------------------+-------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| ssd_512_resnet50_v1_voc          | 80.1  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_resnet50_v1_voc.sh>`_           | `log  <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_resnet50_v1_voc_train.log>`_           |
++----------------------------------+-------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| ssd_512_mobilenet1.0_voc         | 75.4  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_mobilenet1_0_voc.sh>`_          | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_mobilenet1_0_voc_train.log>`_           |
++----------------------------------+-------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+| faster_rcnn_resnet50_v2a_voc     | 77.9  | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/faster_rcnn_resnet50_v2a_voc.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/faster_rcnn_resnet50_v2a_voc_train.log>`_       |
++----------------------------------+-------+--------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------+
+
+.. https://bit.ly/2JM82we
+
++-----------------------------------+----------+------+------+-----------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| Model                             | 0.5:0.95 | 0.5  | 0.75 | Training Command                                                                                                                  | Training Log                                                                                                                     |
++===================================+==========+======+======+===================================================================================================================================+==================================================================================================================================+
+| ssd_300_vgg16_atrous_coco         | 25.1     | 42.9 | 25.8 | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_300_vgg16_atrous_coco.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_300_vgg16_atrous_coco_train.log>`_       |
++-----------------------------------+----------+------+------+-----------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| ssd_512_vgg16_atrous_coco         | 28.9     | 47.9 | 30.6 | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_vgg16_atrous_coco.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_vgg16_atrous_coco_train.log>`_       |
++-----------------------------------+----------+------+------+-----------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| ssd_512_resnet50_v1_coco          | 30.6     | 50.0 | 32.2 | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_resnet50_v1_coco.sh>`_       | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/detection/ssd_512_resnet50_v1_coco_train.log>`_        |
++-----------------------------------+----------+------+------+-----------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
 
 Semantic Segmentation
 ~~~~~~~~~~~~~~~~~~~~~
@@ -181,38 +211,32 @@ Table of pre-trained models for semantic segmentation and their performance.
 
   - ``voc`` is the training dataset.
 
+  The test script :download:`Download test.py<../../scripts/segmentation/test.py>` can be used for
+  evaluating the models (VOC results are evaluated using the official server). For example ``fcn_resnet50_ade``::
+
+    python test.py --dataset ade20k --model-zoo fcn_resnet50_ade --eval
+
   The training commands work with the script: :download:`Download train.py<../../scripts/segmentation/train.py>`
 
 
 .. role:: raw-html(raw)
    :format: html
 
-+-------------------+--------------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Name              | Method       | mIoU      | Training Command                                                                                                            | Training log                                                                                                        |
-+===================+==============+===========+=============================================================================================================================+=====================================================================================================================+
-| fcn_resnet50_voc  | FCN [6]_     | 69.4_     | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet50_voc.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet50_voc.log>`_      |
-+-------------------+--------------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| fcn_resnet101_voc | FCN [6]_     | 70.9_     | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet101_voc.sh>`_     | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet101_voc.log>`_     |
-+-------------------+--------------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
++-------------------+--------------+-----------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| Name              | Method       | pixAcc    | mIoU      | Command                                                                                                                     | log                                                                                                                 |
++===================+==============+===========+===========+=============================================================================================================================+=====================================================================================================================+
+| fcn_resnet50_voc  | FCN [6]_     | N/A       | 69.4_     | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet50_voc.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet50_voc.log>`_      |
++-------------------+--------------+-----------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| fcn_resnet101_voc | FCN [6]_     | N/A       | 70.9_     | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet101_voc.sh>`_     | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet101_voc.log>`_     |
++-------------------+--------------+-----------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| fcn_resnet50_ade  | FCN [6]_     | 78.6      | 38.7      | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet50_ade.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/fcn_resnet50_ade.log>`_      |
++-------------------+--------------+-----------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+| psp_resnet50_ade  | PSP [9]_     | 78.4      | 41.1      | `shell script <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/psp_resnet50_ade.sh>`_      | `log <https://raw.githubusercontent.com/dmlc/web-data/master/gluoncv/logs/segmentation/psp_resnet50_ade.log>`_      |
++-------------------+--------------+-----------+-----------+-----------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
 
 .. _69.4:  http://host.robots.ox.ac.uk:8080/anonymous/TC12D2.html
 .. _70.9:  http://host.robots.ox.ac.uk:8080/anonymous/FTIQXJ.html
 
-.. raw:: html
-
-    <code xml:space="preserve" id="cmd_fcn_50" style="display: none; text-align: left; white-space: pre-wrap">
-    # First training on augmented set
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --dataset pascal_aug --model fcn --backbone resnet50 --lr 0.001 --syncbn --checkname mycheckpoint
-    # Finetuning on original set
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --dataset pascal_voc --model fcn --backbone resnet50 --lr 0.0001 --syncbn --checkname mycheckpoint --resume runs/pascal_aug/fcn/mycheckpoint/checkpoint.params
-    </code>
-
-    <code xml:space="preserve" id="cmd_fcn_101" style="display: none; text-align: left; white-space: pre-wrap">
-    # First training on augmented set
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --dataset pascal_aug --model fcn --backbone resnet101 --lr 0.001 --syncbn --checkname mycheckpoint
-    # Finetuning on original set
-    CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py --dataset pascal_voc --model fcn --backbone resnet101 --lr 0.0001 --syncbn --checkname mycheckpoint --resume runs/pascal_aug/fcn/mycheckpoint/checkpoint.params
-    </code>
 
 .. [1] He, Kaiming, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. \
        "Deep residual learning for image recognition." \
