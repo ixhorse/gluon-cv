@@ -8,26 +8,17 @@ from matplotlib import pyplot as plt
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test with Faster RCNN networks.')
-    parser.add_argument('--network', type=str, default='faster_rcnn_resnet50_v2a_voc',
+    parser.add_argument('--network', type=str, default='faster_rcnn_resnet50_v1b_coco',
                         help="Faster RCNN full network name")
-    parser.add_argument('--short', type=str, default='',
-                        help='Resize image to the given short side side, default to 600 for voc.')
-    parser.add_argument('--max-size', type=str, default='',
-                        help='Max size of either side of image, default to 1000 for voc.')
     parser.add_argument('--images', type=str, default='',
                         help='Test images, use comma to split multiple.')
-    parser.add_argument('--gpus', type=str, default='0',
+    parser.add_argument('--gpus', type=str, default='',
                         help='Training with GPUs, you can specify 1,3 for example.')
     parser.add_argument('--pretrained', type=str, default='True',
                         help='Load weights from previously saved parameters. You can specify parameter file name.')
+    parser.add_argument('--thresh', type=float, default=0.5,
+                        help='Threshold of object score when visualize the bboxes.')
     args = parser.parse_args()
-    dataset = args.network.split('_')[-1]
-    if dataset == 'voc':
-        args.short = int(args.short) if args.short else 600
-        args.max_size = int(args.max_size) if args.max_size else 1000
-    elif dataset == 'coco':
-        args.short = int(args.short) if args.short else 800
-        args.max_size = int(args.max_size) if args.max_size else 1333
     return args
 
 if __name__ == '__main__':
@@ -38,23 +29,25 @@ if __name__ == '__main__':
 
     # grab some image if not specified
     if not args.images.strip():
-        gcv.utils.download("https://cloud.githubusercontent.com/assets/3307514/" +
-            "20012568/cbc2d6f6-a27d-11e6-94c3-d35a9cb47609.jpg", 'street.jpg')
-        image_list = ['street.jpg']
+        gcv.utils.download('https://github.com/dmlc/web-data/blob/master/' +
+                           'gluoncv/detection/biking.jpg?raw=true', 'biking.jpg')
+        image_list = ['biking.jpg']
     else:
         image_list = [x.strip() for x in args.images.split(',') if x.strip()]
 
     if args.pretrained.lower() in ['true', '1', 'yes', 't']:
         net = gcv.model_zoo.get_model(args.network, pretrained=True)
     else:
-        net = gcv.model_zoo.get_model(args.network, pretrained=False)
+        net = gcv.model_zoo.get_model(args.network, pretrained=False, pretrained_base=False)
         net.load_parameters(args.pretrained)
     net.set_nms(0.3, 200)
+    net.collect_params().reset_ctx(ctx = ctx)
 
     ax = None
     for image in image_list:
-        x, img = presets.rcnn.load_test(image, short=args.short, max_size=args.max_size)
-        ids, scores, bboxes = [xx.asnumpy() for xx in net(x)]
-        ax = gcv.utils.viz.plot_bbox(img, bboxes, scores, ids,
+        x, img = presets.rcnn.load_test(image, short=net.short, max_size=net.max_size)
+        x = x.as_in_context(ctx[0])
+        ids, scores, bboxes = [xx[0].asnumpy() for xx in net(x)]
+        ax = gcv.utils.viz.plot_bbox(img, bboxes, scores, ids, thresh=args.thresh,
                                      class_names=net.classes, ax=ax)
         plt.show()

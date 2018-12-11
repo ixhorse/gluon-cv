@@ -114,7 +114,7 @@ class CIFARResNext(HybridBlock):
                 stride = 1 if i == 0 else 2
                 self.features.add(self._make_layer(channels, num_layer, stride, i+1))
                 channels *= 2
-            self.features.add(nn.AvgPool2D(8))
+            self.features.add(nn.GlobalAvgPool2D())
 
             self.output = nn.Dense(classes)
 
@@ -163,9 +163,9 @@ def get_cifar_resnext(num_layers, cardinality=16, bottleneck_width=64,
     net = CIFARResNext(layers, cardinality, bottleneck_width, **kwargs)
     if pretrained:
         from .model_store import get_model_file
-        net.load_params(get_model_file('cifar_resnext%d_%dx%dd'%(num_layers, cardinality,
-                                                                 bottleneck_width),
-                                       root=root), ctx=ctx)
+        net.load_parameters(get_model_file('cifar_resnext%d_%dx%dd'%(num_layers, cardinality,
+                                                                     bottleneck_width),
+                                           tag=pretrained, root=root), ctx=ctx)
     return net
 
 def cifar_resnext29_32x4d(**kwargs):

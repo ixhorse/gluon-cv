@@ -2,8 +2,8 @@
 from __future__ import division
 
 from collections import defaultdict
-import mxnet as mx
 import numpy as np
+import mxnet as mx
 from ..bbox import bbox_iou
 
 class VOCMApMetric(mx.metric.EvalMetric):
@@ -82,7 +82,7 @@ class VOCMApMetric(mx.metric.EvalMetric):
             Prediction bounding boxes scores with shape `B, N`.
         gt_bboxes : mxnet.NDArray or numpy.ndarray
             Ground-truth bounding boxes with shape `B, M, 4`.
-            Where B is the size of mini-batch, M is the number of grount-truths.
+            Where B is the size of mini-batch, M is the number of ground-truths.
         gt_labels : mxnet.NDArray or numpy.ndarray
             Ground-truth bounding boxes labels with shape `B, M`.
         gt_difficults : mxnet.NDArray or numpy.ndarray, optional, default is None
@@ -93,7 +93,11 @@ class VOCMApMetric(mx.metric.EvalMetric):
             """Convert a (list of) mx.NDArray into numpy.ndarray"""
             if isinstance(a, (list, tuple)):
                 out = [x.asnumpy() if isinstance(x, mx.nd.NDArray) else x for x in a]
-                return np.concatenate(out, axis=0)
+                try:
+                    out = np.concatenate(out, axis=0)
+                except ValueError:
+                    out = np.array(out)
+                return out
             elif isinstance(a, mx.nd.NDArray):
                 a = a.asnumpy()
             return a

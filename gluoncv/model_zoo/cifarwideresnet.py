@@ -115,7 +115,7 @@ class CIFARWideResNet(HybridBlock):
                 in_channels = channels[i+1]
             self.features.add(nn.BatchNorm())
             self.features.add(nn.Activation('relu'))
-            self.features.add(nn.AvgPool2D(8))
+            self.features.add(nn.GlobalAvgPool2D())
             self.features.add(nn.Flatten())
             self.output = nn.Dense(classes)
 
@@ -166,8 +166,8 @@ def get_cifar_wide_resnet(num_layers, width_factor=1, drop_rate=0.0,
     net = CIFARWideResNet(CIFARBasicBlockV2, layers, channels, drop_rate, **kwargs)
     if pretrained:
         from .model_store import get_model_file
-        net.load_params(get_model_file('cifar_wideresnet%d_%d'%(num_layers, width_factor),
-                                       root=root), ctx=ctx)
+        net.load_parameters(get_model_file('cifar_wideresnet%d_%d'%(num_layers, width_factor),
+                                           tag=pretrained, root=root), ctx=ctx)
     return net
 
 def cifar_wideresnet16_10(**kwargs):

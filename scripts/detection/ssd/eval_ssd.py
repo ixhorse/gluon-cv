@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import print_function
 
 import argparse
 import logging
@@ -56,7 +57,7 @@ def get_dataloader(val_dataset, data_shape, batch_size, num_workers):
     batchify_fn = Tuple(Stack(), Pad(pad_val=-1))
     val_loader = gluon.data.DataLoader(
         val_dataset.transform(SSDDefaultValTransform(width, height)), batchify_fn=batchify_fn,
-        batch_size, False, last_batch='keep', num_workers=num_workers)
+        batch_size=batch_size, shuffle=False, last_batch='keep', num_workers=num_workers)
     return val_loader
 
 def validate(net, val_data, ctx, classes, size, metric):
@@ -67,8 +68,8 @@ def validate(net, val_data, ctx, classes, size, metric):
     net.hybridize()
     with tqdm(total=size) as pbar:
         for ib, batch in enumerate(val_data):
-            data = gluon.utils.split_and_load(batch[0], ctx_list=ctx, batch_axis=0)
-            label = gluon.utils.split_and_load(batch[1], ctx_list=ctx, batch_axis=0)
+            data = gluon.utils.split_and_load(batch[0], ctx_list=ctx, batch_axis=0, even_split=False)
+            label = gluon.utils.split_and_load(batch[1], ctx_list=ctx, batch_axis=0, even_split=False)
             det_bboxes = []
             det_ids = []
             det_scores = []
@@ -104,7 +105,7 @@ if __name__ == '__main__':
         net = gcv.model_zoo.get_model(net_name, pretrained=True)
     else:
         net = gcv.model_zoo.get_model(net_name, pretrained=False)
-        net.load_params(args.pretrained.strip())
+        net.load_parameters(args.pretrained.strip())
 
     # training data
     val_dataset, val_metric = get_dataset(args.dataset, args.data_shape)

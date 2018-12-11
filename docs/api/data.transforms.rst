@@ -49,6 +49,21 @@ Image Transforms
     ten_crop
 
 
+Instance Segmentation Mask Transforms
+-------------------------------------
+.. currentmodule:: gluoncv.data.transforms.mask
+
+.. autosummary::
+    :nosignatures:
+
+    flip
+
+    resize
+
+    to_mask
+
+    fill
+
 Preset Transforms
 -----------------
 We include presets for reproducing SOTA performances described in
@@ -63,6 +78,8 @@ Single Shot Multibox Object Detector
     :nosignatures:
 
     load_test
+
+    transform_test
 
     SSDDefaultTrainTransform
 
@@ -80,10 +97,44 @@ Faster RCNN
 
     load_test
 
+    transform_test
+
     FasterRCNNDefaultTrainTransform
 
     FasterRCNNDefaultValTransform
 
+Mask RCNN
+~~~~~~~~~
+
+.. currentmodule:: gluoncv.data.transforms.presets.rcnn
+
+.. autosummary::
+    :nosignatures:
+
+    load_test
+
+    transform_test
+
+    MaskRCNNDefaultTrainTransform
+
+    MaskRCNNDefaultValTransform
+
+
+YOLO
+~~~~
+
+.. currentmodule:: gluoncv.data.transforms.presets.yolo
+
+.. autosummary::
+    :nosignatures:
+
+    load_test
+
+    transform_test
+
+    YOLO3DefaultTrainTransform
+
+    YOLO3DefaultValTransform
 
 API Reference
 -------------
@@ -100,6 +151,10 @@ API Reference
     :members:
     :imported-members:
 
+.. automodule:: gluoncv.data.transforms.mask
+    :members:
+    :imported-memebers:
+
 .. automodule:: gluoncv.data.transforms.experimental.bbox
     :members:
     :imported-members:
@@ -114,5 +169,9 @@ API Reference
     :imported-members:
 
 .. automodule:: gluoncv.data.transforms.presets.rcnn
+    :members:
+    :imported-members:
+
+.. automodule:: gluoncv.data.transforms.presets.yolo
     :members:
     :imported-members:

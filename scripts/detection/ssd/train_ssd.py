@@ -108,7 +108,7 @@ def save_params(net, best_map, current_map, epoch, save_interval, prefix):
         best_map[0] = current_map
         net.save_params('{:s}_best.params'.format(prefix, epoch, current_map))
         with open(prefix+'_best_map.log', 'a') as f:
-            f.write('\n{:04d}:\t{:.4f}'.format(epoch, current_map))
+            f.write('{:04d}:\t{:.4f}\n'.format(epoch, current_map))
     if save_interval and epoch % save_interval == 0:
         net.save_params('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
 
@@ -119,8 +119,8 @@ def validate(net, val_data, ctx, eval_metric):
     net.set_nms(nms_thresh=0.45, nms_topk=400)
     net.hybridize()
     for batch in val_data:
-        data = gluon.utils.split_and_load(batch[0], ctx_list=ctx, batch_axis=0)
-        label = gluon.utils.split_and_load(batch[1], ctx_list=ctx, batch_axis=0)
+        data = gluon.utils.split_and_load(batch[0], ctx_list=ctx, batch_axis=0, even_split=False)
+        label = gluon.utils.split_and_load(batch[1], ctx_list=ctx, batch_axis=0, even_split=False)
         det_bboxes = []
         det_ids = []
         det_scores = []
@@ -143,7 +143,7 @@ def validate(net, val_data, ctx, eval_metric):
         eval_metric.update(det_bboxes, det_ids, det_scores, gt_bboxes, gt_ids, gt_difficults)
     return eval_metric.get()
 
-def train(net, train_data, val_data, eval_metric, args):
+def train(net, train_data, val_data, eval_metric, ctx, args):
     """Training pipeline"""
     net.collect_params().reset_ctx(ctx)
     trainer = gluon.Trainer(
@@ -213,7 +213,7 @@ def train(net, train_data, val_data, eval_metric, args):
         name2, loss2 = smoothl1_metric.get()
         logger.info('[Epoch {}] Training cost: {:.3f}, {}={:.3f}, {}={:.3f}'.format(
             epoch, (time.time()-tic), name1, loss1, name2, loss2))
-        if not (epoch + 1) % args.val_interval:
+        if (epoch % args.val_interval == 0) or (args.save_interval and epoch % args.save_interval == 0):
             # consider reduce the frequency of validation to save time
             map_name, mean_ap = validate(net, val_data, ctx, eval_metric)
             val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     args.save_prefix += net_name
     net = get_model(net_name, pretrained_base=True)
     if args.resume.strip():
-        net.load_params(args.resume.strip())
+        net.load_parameters(args.resume.strip())
     else:
         for param in net.collect_params().values():
             if param._data is not None:
@@ -250,4 +250,4 @@ if __name__ == '__main__':
         net, train_dataset, val_dataset, args.data_shape, args.batch_size, args.num_workers)
 
     # training
-    train(net, train_data, val_data, eval_metric, args)
+    train(net, train_data, val_data, eval_metric, ctx, args)

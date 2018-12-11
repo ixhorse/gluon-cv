@@ -1,5 +1,6 @@
-import argparse, time, logging, os
+import argparse, time, logging, os, math
 
+import numpy as np
 import mxnet as mx
 from mxnet import gluon, nd
 from mxnet import autograd as ag
@@ -53,29 +54,56 @@ parser.add_argument('--warmup-lr', type=float, default=0.0,
 parser.add_argument('--warmup-epochs', type=int, default=0,
                     help='number of warmup epochs.')
 parser.add_argument('--last-gamma', action='store_true',
-                    help='whether to initialize the gamma of the last BN layer in each bottleneck to zero')
+                    help='whether to init gamma of the last BN layer in each bottleneck to 0.')
 parser.add_argument('--mode', type=str,
                     help='mode in which to train the model. options are symbolic, imperative, hybrid')
 parser.add_argument('--model', type=str, required=True,
                     help='type of model to use. see vision_model for options.')
+parser.add_argument('--input-size', type=int, default=224,
+                    help='size of the input image size. default is 224')
+parser.add_argument('--crop-ratio', type=float, default=0.875,
+                    help='Crop ratio during validation. default is 0.875')
 parser.add_argument('--use-pretrained', action='store_true',
                     help='enable using pretrained model from gluon.')
 parser.add_argument('--use_se', action='store_true',
                     help='use SE layers or not in resnext. default is false.')
+parser.add_argument('--mixup', action='store_true',
+                    help='whether train the model with mix-up. default is false.')
+parser.add_argument('--mixup-alpha', type=float, default=0.2,
+                    help='beta distribution parameter for mixup sampling, default is 0.2.')
+parser.add_argument('--mixup-off-epoch', type=int, default=0,
+                    help='how many last epochs to train without mixup, default is 0.')
+parser.add_argument('--label-smoothing', action='store_true',
+                    help='use label smoothing or not in training. default is false.')
+parser.add_argument('--no-wd', action='store_true',
+                    help='whether to remove weight decay on bias, and beta/gamma for batchnorm layers.')
 parser.add_argument('--batch-norm', action='store_true',
                     help='enable batch normalization or not in vgg. default is false.')
-parser.add_argument('--log-interval', type=int, default=50,
-                    help='Number of batches to wait before logging.')
 parser.add_argument('--save-frequency', type=int, default=10,
                     help='frequency of model saving.')
 parser.add_argument('--save-dir', type=str, default='params',
                     help='directory of saved models')
-parser.add_argument('--logging-dir', type=str, default='logs',
-                    help='directory of training logs')
+parser.add_argument('--resume-epoch', type=int, default=0,
+                    help='epoch to resume training from.')
+parser.add_argument('--resume-params', type=str, default='',
+                    help='path of parameters to load from.')
+parser.add_argument('--resume-states', type=str, default='',
+                    help='path of trainer state to load from.')
+parser.add_argument('--log-interval', type=int, default=50,
+                    help='Number of batches to wait before logging.')
+parser.add_argument('--logging-file', type=str, default='train_imagenet.log',
+                    help='name of training log file')
 opt = parser.parse_args()
 
-logging.basicConfig(level=logging.INFO)
-logging.info(opt)
+filehandler = logging.FileHandler(opt.logging_file)
+streamhandler = logging.StreamHandler()
+
+logger = logging.getLogger('')
+logger.setLevel(logging.INFO)
+logger.addHandler(filehandler)
+logger.addHandler(streamhandler)
+
+logger.info(opt)
 
 batch_size = opt.batch_size
 classes = 1000
@@ -95,9 +123,9 @@ else:
     lr_decay_epoch = [int(i) for i in opt.lr_decay_epoch.split(',')]
 num_batches = num_training_samples // batch_size
 lr_scheduler = LRScheduler(mode=opt.lr_mode, baselr=opt.lr,
-                            niters=num_batches, nepochs=opt.num_epochs,
-                            step=lr_decay_epoch, step_factor=opt.lr_decay, power=2,
-                            warmup_epochs=opt.warmup_epochs)
+                           niters=num_batches, nepochs=opt.num_epochs,
+                           step=lr_decay_epoch, step_factor=opt.lr_decay, power=2,
+                           warmup_epochs=opt.warmup_epochs)
 
 model_name = opt.model
 
@@ -117,6 +145,8 @@ if opt.dtype != 'float32':
 
 net = get_model(model_name, **kwargs)
 net.cast(opt.dtype)
+if opt.resume_params is not '':
+    net.load_parameters(opt.resume_params, ctx = context)
 
 # Two functions for reading data from record file or raw images
 def get_data_rec(rec_train, rec_train_idx, rec_val, rec_val_idx, batch_size, num_workers):
@@ -126,6 +156,9 @@ def get_data_rec(rec_train, rec_train_idx, rec_val, rec_val_idx, batch_size, num
     rec_val_idx = os.path.expanduser(rec_val_idx)
     jitter_param = 0.4
     lighting_param = 0.1
+    input_size = opt.input_size
+    crop_ratio = opt.crop_ratio if opt.crop_ratio > 0 else 0.875
+    resize = int(math.ceil(input_size / crop_ratio))
     mean_rgb = [123.68, 116.779, 103.939]
     std_rgb = [58.393, 57.12, 57.375]
 
@@ -141,7 +174,7 @@ def get_data_rec(rec_train, rec_train_idx, rec_val, rec_val_idx, batch_size, num
         shuffle             = True,
         batch_size          = batch_size,
 
-        data_shape          = (3, 224, 224),
+        data_shape          = (3, input_size, input_size),
         mean_r              = mean_rgb[0],
         mean_g              = mean_rgb[1],
         mean_b              = mean_rgb[2],
@@ -166,8 +199,8 @@ def get_data_rec(rec_train, rec_train_idx, rec_val, rec_val_idx, batch_size, num
         shuffle             = False,
         batch_size          = batch_size,
 
-        resize              = 256,
-        data_shape          = (3, 224, 224),
+        resize              = resize,
+        data_shape          = (3, input_size, input_size),
         mean_r              = mean_rgb[0],
         mean_g              = mean_rgb[1],
         mean_b              = mean_rgb[2],
@@ -181,6 +214,9 @@ def get_data_loader(data_dir, batch_size, num_workers):
     normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     jitter_param = 0.4
     lighting_param = 0.1
+    input_size = opt.input_size
+    crop_ratio = opt.crop_ratio if opt.crop_ratio > 0 else 0.875
+    resize = int(math.ceil(input_size / crop_ratio))
 
     def batch_fn(batch, ctx):
         data = gluon.utils.split_and_load(batch[0], ctx_list=ctx, batch_axis=0)
@@ -188,7 +224,7 @@ def get_data_loader(data_dir, batch_size, num_workers):
         return data, label
 
     transform_train = transforms.Compose([
-        transforms.RandomResizedCrop(224),
+        transforms.RandomResizedCrop(input_size),
         transforms.RandomFlipLeftRight(),
         transforms.RandomColorJitter(brightness=jitter_param, contrast=jitter_param,
                                      saturation=jitter_param),
@@ -197,8 +233,8 @@ def get_data_loader(data_dir, batch_size, num_workers):
         normalize
     ])
     transform_test = transforms.Compose([
-        transforms.Resize(256, keep_ratio=True),
-        transforms.CenterCrop(224),
+        transforms.Resize(resize, keep_ratio=True),
+        transforms.CenterCrop(input_size),
         transforms.ToTensor(),
         normalize
     ])
@@ -219,6 +255,10 @@ if opt.use_rec:
 else:
     train_data, val_data, batch_fn = get_data_loader(opt.data_dir, batch_size, num_workers)
 
+if opt.mixup:
+    train_metric = mx.metric.RMSE()
+else:
+    train_metric = mx.metric.Accuracy()
 acc_top1 = mx.metric.Accuracy()
 acc_top5 = mx.metric.TopKAccuracy(5)
 
@@ -229,6 +269,25 @@ if opt.save_dir and save_frequency:
 else:
     save_dir = ''
     save_frequency = 0
+
+def mixup_transform(label, classes, lam=1, eta=0.0):
+    if isinstance(label, nd.NDArray):
+        label = [label]
+    res = []
+    for l in label:
+        y1 = l.one_hot(classes, on_value = 1 - eta + eta/classes, off_value = eta/classes)
+        y2 = l[::-1].one_hot(classes, on_value = 1 - eta + eta/classes, off_value = eta/classes)
+        res.append(lam*y1 + (1-lam)*y2)
+    return res
+
+def smooth(label, classes, eta=0.1):
+    if isinstance(label, nd.NDArray):
+        label = [label]
+    smoothed = []
+    for l in label:
+        res = l.one_hot(classes, on_value = 1 - eta + eta/classes, off_value = eta/classes)
+        smoothed.append(res)
+    return smoothed
 
 def test(ctx, val_data):
     if opt.use_rec:
@@ -248,59 +307,96 @@ def test(ctx, val_data):
 def train(ctx):
     if isinstance(ctx, mx.Context):
         ctx = [ctx]
-    net.initialize(mx.init.MSRAPrelu(), ctx=ctx)
+    if opt.resume_params is '':
+        net.initialize(mx.init.MSRAPrelu(), ctx=ctx)
+
+    if opt.no_wd:
+        for k, v in net.collect_params('.*beta|.*gamma|.*bias').items():
+            v.wd_mult = 0.0
 
     trainer = gluon.Trainer(net.collect_params(), optimizer, optimizer_params)
+    if opt.resume_states is not '':
+        trainer.load_states(opt.resume_states)
 
-    L = gluon.loss.SoftmaxCrossEntropyLoss()
+    if opt.label_smoothing or opt.mixup:
+        L = gluon.loss.SoftmaxCrossEntropyLoss(sparse_label=False)
+    else:
+        L = gluon.loss.SoftmaxCrossEntropyLoss()
 
     best_val_score = 1
 
-    for epoch in range(opt.num_epochs):
+    for epoch in range(opt.resume_epoch, opt.num_epochs):
         tic = time.time()
         if opt.use_rec:
             train_data.reset()
-        acc_top1.reset()
+        train_metric.reset()
         btic = time.time()
 
         for i, batch in enumerate(train_data):
             data, label = batch_fn(batch, ctx)
+
+            if opt.mixup:
+                lam = np.random.beta(opt.mixup_alpha, opt.mixup_alpha)
+                if epoch >= opt.num_epochs - opt.mixup_off_epoch:
+                    lam = 1
+                data = [lam*X + (1-lam)*X[::-1] for X in data]
+
+                if opt.label_smoothing:
+                    eta = 0.1
+                else:
+                    eta = 0.0
+                label = mixup_transform(label, classes, lam, eta)
+
+            elif opt.label_smoothing:
+                hard_label = label
+                label = smooth(label, classes)
+
             with ag.record():
                 outputs = [net(X.astype(opt.dtype, copy=False)) for X in data]
-                loss = [L(yhat, y) for yhat, y in zip(outputs, label)]
+                loss = [L(yhat, y.astype(opt.dtype, copy=False)) for yhat, y in zip(outputs, label)]
             for l in loss:
                 l.backward()
             lr_scheduler.update(i, epoch)
             trainer.step(batch_size)
 
-            acc_top1.update(label, outputs)
+            if opt.mixup:
+                output_softmax = [nd.SoftmaxActivation(out.astype('float32', copy=False)) \
+                                  for out in outputs]
+                train_metric.update(label, output_softmax)
+            else:
+                if opt.label_smoothing:
+                    train_metric.update(hard_label, outputs)
+                else:
+                    train_metric.update(label, outputs)
+
             if opt.log_interval and not (i+1)%opt.log_interval:
-                _, top1 = acc_top1.get()
-                err_top1 = 1-top1
-                logging.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\ttop1-err=%f\tlr=%f'%(
-                             epoch, i, batch_size*opt.log_interval/(time.time()-btic), err_top1,
-                             trainer.learning_rate))
+                train_metric_name, train_metric_score = train_metric.get()
+                logger.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f\tlr=%f'%(
+                             epoch, i, batch_size*opt.log_interval/(time.time()-btic),
+                             train_metric_name, train_metric_score, trainer.learning_rate))
                 btic = time.time()
 
-        _, top1 = acc_top1.get()
-        err_top1 = 1-top1
+        train_metric_name, train_metric_score = train_metric.get()
         throughput = int(batch_size * i /(time.time() - tic))
 
         err_top1_val, err_top5_val = test(ctx, val_data)
 
-        logging.info('[Epoch %d] training: err-top1=%f'%(epoch, err_top1))
-        logging.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f'%(epoch, throughput, time.time()-tic))
-        logging.info('[Epoch %d] validation: err-top1=%f err-top5=%f'%(epoch, err_top1_val, err_top5_val))
+        logger.info('[Epoch %d] training: %s=%f'%(epoch, train_metric_name, train_metric_score))
+        logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f'%(epoch, throughput, time.time()-tic))
+        logger.info('[Epoch %d] validation: err-top1=%f err-top5=%f'%(epoch, err_top1_val, err_top5_val))
 
-        if err_top1_val < best_val_score and epoch > 50:
+        if err_top1_val < best_val_score:
             best_val_score = err_top1_val
             net.save_parameters('%s/%.4f-imagenet-%s-%d-best.params'%(save_dir, best_val_score, model_name, epoch))
+            trainer.save_states('%s/%.4f-imagenet-%s-%d-best.states'%(save_dir, best_val_score, model_name, epoch))
 
         if save_frequency and save_dir and (epoch + 1) % save_frequency == 0:
             net.save_parameters('%s/imagenet-%s-%d.params'%(save_dir, model_name, epoch))
+            trainer.save_states('%s/imagenet-%s-%d.states'%(save_dir, model_name, epoch))
 
     if save_frequency and save_dir:
         net.save_parameters('%s/imagenet-%s-%d.params'%(save_dir, model_name, opt.num_epochs-1))
+        trainer.save_states('%s/imagenet-%s-%d.states'%(save_dir, model_name, opt.num_epochs-1))
 
 def main():
     if opt.mode == 'hybrid':
