@@ -1,6 +1,8 @@
 """Train YOLOv3 with random shapes."""
 import argparse
-import os
+import os, sys
+sys.path.append('../..')
+
 import logging
 import time
 import warnings
@@ -21,6 +23,8 @@ from gluoncv.utils.metrics.voc_detection import VOC07MApMetric
 from gluoncv.utils.metrics.coco_detection import COCODetectionMetric
 from gluoncv.utils import LRScheduler
 
+userhome = os.path.expanduser('~')
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train YOLO networks with random input shape.')
     parser.add_argument('--network', type=str, default='darknet53',
@@ -32,6 +36,8 @@ def parse_args():
                         help='Training mini-batch size')
     parser.add_argument('--dataset', type=str, default='voc',
                         help='Training dataset. Now support voc.')
+    parser.add_argument('--dataset_root', type=str, default=os.path.join(userhome, 'data/VOCdevkit'),
+                        help='Training dataset root.')
     parser.add_argument('--num-workers', '-j', dest='num_workers', type=int,
                         default=4, help='Number of data workers, you can use larger '
                         'number to accelerate data loading, if you CPU and GPUs are powerful.')
@@ -65,10 +71,13 @@ def parse_args():
                         help='Weight decay, default is 5e-4')
     parser.add_argument('--log-interval', type=int, default=100,
                         help='Logging mini-batch interval. Default is 100.')
+    parser.add_argument('--save-dir', type=str, default='weights',
+                        help='Saving parameter dir')
     parser.add_argument('--save-prefix', type=str, default='',
                         help='Saving parameter prefix')
     parser.add_argument('--save-interval', type=int, default=10,
                         help='Saving parameters epoch interval, best model will always be saved.')
+    parser.add_argument('--val', type=int, default=1, help='validation.')
     parser.add_argument('--val-interval', type=int, default=1,
                         help='Epoch interval for validation, increase the number will reduce the '
                              'training time if validation is slow.')
@@ -93,9 +102,9 @@ def parse_args():
 
 def get_dataset(dataset, args):
     if dataset.lower() == 'voc':
-        train_dataset = gdata.VOCDetection(
+        train_dataset = gdata.VOCDetection(root=args.dataset_root,
             splits=[(2007, 'trainval'), (2012, 'trainval')])
-        val_dataset = gdata.VOCDetection(
+        val_dataset = gdata.VOCDetection(root=args.dataset_root,
             splits=[(2007, 'test')])
         val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=val_dataset.classes)
     elif dataset.lower() == 'coco':
@@ -104,6 +113,10 @@ def get_dataset(dataset, args):
         val_metric = COCODetectionMetric(
             val_dataset, args.save_prefix + '_eval', cleanup=True,
             data_shape=(args.data_shape, args.data_shape))
+    elif dataset.lower() == 'tt100k':
+        train_dataset = gdata.TT100KDetection(root=args.dataset_root, splits='train')
+        val_dataset = None
+        val_metric = None
     else:
         raise NotImplementedError('Dataset: {} not implemented.'.format(dataset))
     if args.num_samples < 0:
@@ -126,10 +139,13 @@ def get_dataloader(net, train_dataset, val_dataset, data_shape, batch_size, num_
         train_loader = RandomTransformDataLoader(
             transform_fns, train_dataset, batch_size=batch_size, interval=10, last_batch='rollover',
             shuffle=True, batchify_fn=batchify_fn, num_workers=num_workers)
-    val_batchify_fn = Tuple(Stack(), Pad(pad_val=-1))
-    val_loader = gluon.data.DataLoader(
-        val_dataset.transform(YOLO3DefaultValTransform(width, height)),
-        batch_size, False, batchify_fn=val_batchify_fn, last_batch='keep', num_workers=num_workers)
+    if args.val:
+        val_batchify_fn = Tuple(Stack(), Pad(pad_val=-1))
+        val_loader = gluon.data.DataLoader(
+            val_dataset.transform(YOLO3DefaultValTransform(width, height)),
+            batch_size, False, batchify_fn=val_batchify_fn, last_batch='keep', num_workers=num_workers)
+    else:
+        val_loader = None
     return train_loader, val_loader
 
 def save_params(net, best_map, current_map, epoch, save_interval, prefix):
@@ -140,7 +156,7 @@ def save_params(net, best_map, current_map, epoch, save_interval, prefix):
         with open(prefix+'_best_map.log', 'a') as f:
             f.write('{:04d}:\t{:.4f}\n'.format(epoch, current_map))
     if save_interval and epoch % save_interval == 0:
-        net.save_parameters('{:s}_{:04d}_{:.4f}.params'.format(prefix, epoch, current_map))
+        net.save_parameters('{:s}/{:s}_{:04d}_{:.4f}.params'.format(args.save_dir, prefix, epoch, current_map))
 
 def validate(net, val_data, ctx, eval_metric):
     """Test on validation dataset."""
@@ -282,36 +298,52 @@ def train(net, train_data, val_data, eval_metric, ctx, args):
         name4, loss4 = cls_metrics.get()
         logger.info('[Epoch {}] Training cost: {:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}, {}={:.3f}'.format(
             epoch, (time.time()-tic), name1, loss1, name2, loss2, name3, loss3, name4, loss4))
-        if not (epoch + 1) % args.val_interval:
-            # consider reduce the frequency of validation to save time
-            map_name, mean_ap = validate(net, val_data, ctx, eval_metric)
-            val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
-            logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
-            current_map = float(mean_ap[-1])
+
+        if args.val:
+            if not (epoch + 1) % args.val_interval:
+                # consider reduce the frequency of validation to save time
+                map_name, mean_ap = validate(net, val_data, ctx, eval_metric)
+                val_msg = '\n'.join(['{}={}'.format(k, v) for k, v in zip(map_name, mean_ap)])
+                logger.info('[Epoch {}] Validation: \n{}'.format(epoch, val_msg))
+                current_map = float(mean_ap[-1])
+            else:
+                current_map = 0.
+            save_params(net, best_map, current_map, epoch, args.save_interval, args.save_prefix)
         else:
-            current_map = 0.
-        save_params(net, best_map, current_map, epoch, args.save_interval, args.save_prefix)
+            if (epoch % args.save_interval == 0) or (epoch == args.epochs-1):
+                net.save_parameters('{:s}/{:s}_{:04d}.params'.format(args.save_dir, args.save_prefix, epoch))
 
 if __name__ == '__main__':
     args = parse_args()
     # fix seed for mxnet, numpy and python builtin random generator.
     gutils.random.seed(args.seed)
+    if not os.path.exists(args.save_dir):
+        os.makedirs(args.save_dir)
 
     # training contexts
     ctx = [mx.gpu(int(i)) for i in args.gpus.split(',') if i.strip()]
     ctx = ctx if ctx else [mx.cpu()]
 
     # network
-    net_name = '_'.join(('yolo3', args.network, args.dataset))
+    net_type = args.dataset if args.dataset in ['voc', 'coco'] else 'custom'
+    net_name = '_'.join(('yolo3', args.network, net_type))
     args.save_prefix += net_name
     # use sync bn if specified
     num_sync_bn_devices = len(ctx) if args.syncbn else -1
     if num_sync_bn_devices > 1:
-        net = get_model(net_name, pretrained_base=True, num_sync_bn_devices=num_sync_bn_devices)
+        if args.dataset == 'tt100k':
+            net = get_model(net_name, pretrained_base=True, num_sync_bn_devices=num_sync_bn_devices,
+                            classes=gdata.TT100KDetection.CLASSES)
+        else:
+            net = get_model(net_name, pretrained_base=True, num_sync_bn_devices=num_sync_bn_devices)
         async_net = get_model(net_name, pretrained_base=False)  # used by cpu worker
     else:
-        net = get_model(net_name, pretrained_base=True)
+        if args.dataset == 'tt100k':
+            net = get_model(net_name, pretrained_base=True, classes=gdata.TT100KDetection.CLASSES)
+        else:
+            net = get_model(net_name, pretrained_base=True)
         async_net = net
+
     if args.resume.strip():
         net.load_parameters(args.resume.strip())
         async_net.load_parameters(args.resume.strip())

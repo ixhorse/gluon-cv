@@ -244,8 +244,7 @@ def train(net, train_data, val_data, eval_metric, ctx, args):
                 current_map = 0.
             save_params(net, best_map, current_map, epoch, args.save_interval, args.save_prefix)
         else:
-            if epoch % args.save_interval == 0:
-                
+            if (epoch % args.save_interval == 0) or (epoch == args.epochs-1):
                 net.save_parameters('{:s}/{:s}_{:04d}.params'.format(args.save_dir, args.save_prefix, epoch))
 
 if __name__ == '__main__':

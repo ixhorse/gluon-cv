@@ -111,3 +111,7 @@ ENV/
 
 *.png*
 *.jpg*
+
+# results
+projects/ssd/results
+projects/yolo/results
