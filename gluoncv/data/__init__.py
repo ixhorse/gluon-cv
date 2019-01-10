@@ -18,6 +18,7 @@ from .recordio.detection import RecordFileDetection
 from .lst.detection import LstDetection
 from .mixup.detection import MixupDetection
 from .tt100k.detection import TT100KDetection
+from .tt100k.segmentation import TT100KSegmentation
 
 datasets = {
     'ade20k': ADE20KSegmentation,
@@ -25,6 +26,7 @@ datasets = {
     'pascal_aug': VOCAugSegmentation,
     'coco' : COCOSegmentation,
     'citys' : CitySegmentation,
+    'tt100k' : TT100KSegmentation,
 }
 
 def get_segmentation_dataset(name, **kwargs):
