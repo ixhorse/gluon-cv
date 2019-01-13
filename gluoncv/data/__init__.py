@@ -19,6 +19,7 @@ from .lst.detection import LstDetection
 from .mixup.detection import MixupDetection
 from .tt100k.detection import TT100KDetection
 from .tt100k.segmentation import TT100KSegmentation
+from .tt100k.region import TT100KRegion
 
 datasets = {
     'ade20k': ADE20KSegmentation,
@@ -27,6 +28,7 @@ datasets = {
     'coco' : COCOSegmentation,
     'citys' : CitySegmentation,
     'tt100k' : TT100KSegmentation,
+    'tt100k_region' : TT100KRegion,
 }
 
 def get_segmentation_dataset(name, **kwargs):

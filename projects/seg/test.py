@@ -18,7 +18,8 @@ from gluoncv.data import get_segmentation_dataset, ms_batchify_fn
 from gluoncv.utils.viz import get_color_pallete
 from gluoncv.utils.parallel import *
 
-import deeplabv3
+from deeplabv3 import get_deeplab
+from region_net import get_regionnet
 import pdb
 
 userhome = os.path.expanduser('~')
@@ -118,6 +119,7 @@ def test(args):
         os.makedirs(outdir)
     # image transform
     input_transform = transforms.Compose([
+        transforms.Resize(480),
         transforms.ToTensor(),
         transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
     ])
@@ -137,10 +139,16 @@ def test(args):
     if args.model_zoo is not None:
         model = get_model(args.model_zoo, pretrained=True)
     else:
-        model = deeplabv3.get_deeplab(dataset=args.dataset, ctx=args.ctx,
-                                       backbone=args.backbone, norm_layer=args.norm_layer,
-                                       norm_kwargs=args.norm_kwargs, aux=args.aux,
-                                       base_size=args.base_size, crop_size=args.crop_size)
+        if 'region' in args.dataset:
+            model = get_regionnet(dataset=args.dataset, ctx=args.ctx,
+                                    backbone=args.backbone, norm_layer=args.norm_layer,
+                                    norm_kwargs=args.norm_kwargs, aux=args.aux,
+                                    crop_size=args.crop_size)
+        else:
+            model = get_deeplab(dataset=args.dataset, ctx=args.ctx,
+                                backbone=args.backbone, norm_layer=args.norm_layer,
+                                norm_kwargs=args.norm_kwargs, aux=args.aux,
+                                crop_size=args.crop_size)
         # load pretrained weight
         assert args.resume is not None, '=> Please provide the checkpoint using --resume'
         if os.path.isfile(args.resume):
@@ -149,7 +157,8 @@ def test(args):
             raise RuntimeError("=> no checkpoint found at '{}'" \
                 .format(args.resume))
     # print(model)
-    evaluator = MultiEvalModel(model, testset.num_class, ctx_list=args.ctx, scales=[1.0], flip=False)
+    # evaluator = MultiEvalModel(model, testset.num_class, ctx_list=args.ctx, scales=[1.0], flip=False)
+    evaluator = SegEvalModel(model)
     metric = gluoncv.utils.metrics.SegmentationMetric(testset.num_class)
 
     tbar = tqdm(test_data)
@@ -164,11 +173,13 @@ def test(args):
         else:
             im_paths = dsts
             # pdb.set_trace()
-            predicts = evaluator.parallel_forward(data)
-            for predict, impath in zip(predicts, im_paths):
+            # predicts = evaluator.parallel_forward(data)
+            predicts = evaluator(data[0].as_in_context(args.ctx[0]).expand_dims(0))
+            for predict, impath in zip([predicts], im_paths):
                 predict = mx.nd.squeeze(mx.nd.argmax(predict[0], 0)).asnumpy() + \
                     testset.pred_offset
                 mask = predict * 255
+                # mask = cv2.resize(mask, (614, 614))
                 outname = os.path.splitext(impath)[0] + '.png'
                 cv2.imwrite(os.path.join(outdir, outname), mask)
                 # mask = get_color_pallete(predict, args.dataset)

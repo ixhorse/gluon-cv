@@ -272,9 +272,9 @@ class SoftmaxCrossEntropyLoss(Loss):
         loss = -F.pick(F.log(softmaxout), label, axis=1, keepdims=True)
         loss = F.where(label.expand_dims(axis=1) == self._ignore_label,
                        F.zeros_like(loss), loss)
-        sample_weight = F.where(label.expand_dims(axis=1) == 0,
-                       F.ones_like(loss), F.ones_like(loss)*5)
-        loss = _apply_weighting(F, loss, 1., sample_weight)
+        # sample_weight = F.where(label.expand_dims(axis=1) == 0,
+        #                F.ones_like(loss), F.ones_like(loss)*10)
+        # loss = _apply_weighting(F, loss, 1., sample_weight)
         return F.mean(loss, axis=self._batch_axis, exclude=True)
 
 class MixSoftmaxCrossEntropyLoss(SoftmaxCrossEntropyLoss):

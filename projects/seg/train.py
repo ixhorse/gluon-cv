@@ -14,12 +14,13 @@ import gluoncv
 from gluoncv.utils import LRScheduler
 from gluoncv.model_zoo.segbase import *
 from gluoncv.model_zoo import get_model
-from gluoncv.model_zoo.deeplabv3 import get_deeplab
+# from gluoncv.model_zoo.deeplabv3 import get_deeplab
 from gluoncv.utils.parallel import *
 from gluoncv.data import get_segmentation_dataset
 
 from loss import *
-import deeplabv3
+from deeplabv3 import get_deeplab
+from region_net import get_regionnet
 import pdb
 
 userhome = os.path.expanduser('~')
@@ -84,7 +85,7 @@ def parse_args():
                         help='set the checkpoint name')
     parser.add_argument('--model-zoo', type=str, default=None,
                         help='evaluating on model zoo model')
-    parser.add_argument('--save-interval', type=int, default=10,
+    parser.add_argument('--save-interval', type=int, default=5,
                         help='Saving parameters epoch interval')
     # evaluation only
     parser.add_argument('--eval', action='store_true', default= False,
@@ -115,32 +116,23 @@ def parse_args():
 class Trainer(object):
     def __init__(self, args):
         self.args = args
-        # image transform
-        input_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
-        ])
-        # dataset and dataloader
-        data_kwargs = {'transform': input_transform, 'base_size': args.base_size,
-                       'crop_size': args.crop_size}
-        trainset = get_segmentation_dataset(args.dataset,
-            root=args.dataset_root, split='train', mode='train', **data_kwargs)       
-        self.train_data = gluon.data.DataLoader(
-            trainset, args.batch_size, shuffle=True, last_batch='rollover',
-            num_workers=args.workers)
-        if not self.args.no_val:
-            valset = get_segmentation_dataset(args.dataset, 
-                root=args.dataset_root, split='val', mode='val', **data_kwargs)
-            self.eval_data = gluon.data.DataLoader(valset, args.test_batch_size,
-                last_batch='rollover', num_workers=args.workers)
-        # create network
+        # data
+        self.get_dataloader()
+        # network
         if args.model_zoo is not None:
             model = get_model(args.model_zoo, pretrained=True)
         else:
-            model = deeplabv3.get_deeplab(dataset=args.dataset,
-                                        backbone=args.backbone, norm_layer=args.norm_layer,
-                                        norm_kwargs=args.norm_kwargs, aux=args.aux,
-                                        crop_size=args.crop_size)
+            if 'region' in self.args.dataset:
+                model = get_regionnet(dataset=args.dataset,
+                                            backbone=args.backbone, norm_layer=args.norm_layer,
+                                            norm_kwargs=args.norm_kwargs, aux=args.aux,
+                                            crop_size=args.crop_size)
+            else:
+                model = get_deeplab(dataset=args.dataset,
+                                            backbone=args.backbone, norm_layer=args.norm_layer,
+                                            norm_kwargs=args.norm_kwargs, aux=args.aux,
+                                            crop_size=args.crop_size)
+        
         model.cast(args.dtype)
         # print(model)
         self.net = DataParallelModel(model, args.ctx, args.syncbn)
@@ -156,7 +148,7 @@ class Trainer(object):
         criterion = MixSoftmaxCrossEntropyLoss(args.aux, aux_weight=args.aux_weight)
         self.criterion = DataParallelCriterion(criterion, args.ctx, args.syncbn)
         # optimizer and lr scheduling
-        self.lr_scheduler = LRScheduler(mode='poly', baselr=args.lr,
+        self.lr_scheduler = LRScheduler(mode='step', baselr=args.lr,
                                         niters=len(self.train_data),
                                         nepochs=args.epochs)
         kv = mx.kv.create(args.kvstore)
@@ -173,7 +165,7 @@ class Trainer(object):
         self.optimizer = gluon.Trainer(self.net.module.collect_params(), 'sgd',
                                        optimizer_params, kvstore = kv)
         # evaluation metrics
-        self.metric = gluoncv.utils.metrics.SegmentationMetric(trainset.num_class)
+        # self.metric = gluoncv.utils.metrics.SegmentationMetric(trainset.num_class)
 
     def training(self, epoch):
         tbar = tqdm(self.train_data)
@@ -210,6 +202,35 @@ class Trainer(object):
                 (epoch, pixAcc, mIoU))
             mx.nd.waitall()
 
+    def get_dataloader(self):
+        # image transform
+        if 'region' in self.args.dataset:
+            input_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
+            ])
+            # dataset and dataloader
+            data_kwargs = {'transform': input_transform, 'size': args.crop_size} 
+        else:
+            input_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
+            ])
+            # dataset and dataloader
+            data_kwargs = {'transform': input_transform, 'base_size': args.base_size,
+                           'crop_size': args.crop_size}
+        
+        trainset = get_segmentation_dataset(args.dataset,
+            root=args.dataset_root, split='train', mode='train', **data_kwargs)       
+        self.train_data = gluon.data.DataLoader(
+            trainset, args.batch_size, shuffle=True, last_batch='rollover',
+            num_workers=args.workers)
+        
+        if not self.args.no_val:
+            valset = get_segmentation_dataset(args.dataset, 
+                root=args.dataset_root, split='val', mode='val', **data_kwargs)
+            self.eval_data = gluon.data.DataLoader(valset, args.test_batch_size,
+                last_batch='rollover', num_workers=args.workers)
 
 def save_checkpoint(net, args, epoch, is_best=False):
     """Save Checkpoint"""
