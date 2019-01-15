@@ -168,10 +168,10 @@ class Trainer(object):
         # self.metric = gluoncv.utils.metrics.SegmentationMetric(trainset.num_class)
 
     def training(self, epoch):
-        tbar = tqdm(self.train_data)
+        # tbar = tqdm(self.train_data)
         train_loss = 0.0
         alpha = 0.2
-        for i, (data, target) in enumerate(tbar):
+        for i, (data, target) in enumerate(self.train_data):
             self.lr_scheduler.update(i, epoch)
             with autograd.record(True):
                 outputs = self.net(data.astype(args.dtype, copy=False))
@@ -181,8 +181,11 @@ class Trainer(object):
             self.optimizer.step(self.args.batch_size)
             for loss in losses:
                 train_loss += loss.asnumpy()[0] / len(losses)
-            tbar.set_description('Epoch %d, training loss %.3f'%\
-                (epoch, train_loss/(i+1)))
+            if i % 50 == 0:
+                print('[Epoch] %d, [Batch] %04d, [loss] %.4f' % \
+                    (epoch, i, train_loss/(i+1)))
+            # tbar.set_description('Epoch %d, loss %.3f'%\
+            #    (epoch, train_loss/(i+1)))
             mx.nd.waitall()
 
         # save every epoch

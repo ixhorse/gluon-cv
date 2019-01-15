@@ -66,7 +66,7 @@ class _DeepLabHead(HybridBlock):
     def __init__(self, nclass, norm_layer=nn.BatchNorm, norm_kwargs={}, **kwargs):
         super(_DeepLabHead, self).__init__()
         with self.name_scope():
-            self.aspp = _ASPP(2048, [12, 24, 36], norm_layer=norm_layer,
+            self.aspp = _ASPP(2048, [3, 6, 36], norm_layer=norm_layer,
                               norm_kwargs=norm_kwargs, **kwargs)
             self.block = nn.HybridSequential()
             self.block.add(nn.Conv2D(in_channels=256, channels=256,
