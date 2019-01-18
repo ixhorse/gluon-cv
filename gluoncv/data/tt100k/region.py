@@ -81,7 +81,7 @@ class TT100KRegion(VisionDataset):
                 img = self.transform(img)
             return img, os.path.basename(self.images[index])
         mask = Image.open(self.masks[index])
-        assert mask.size == (30, 30)
+        # assert mask.size == (30, 30)
 
         # synchronized transform
         if self.mode == 'train':

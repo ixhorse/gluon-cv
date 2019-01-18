@@ -43,17 +43,19 @@ class RegionNet(SegBaseModel):
             self.head.collect_params().setattr('lr_mult', 10)
             if self.aux:
                 self.auxlayer = _FCNHead(1024, nclass, **kwargs)
+                self.pool = nn.MaxPool2D(pool_size=2, strides=2)
                 self.auxlayer.initialize(ctx=ctx)
                 self.auxlayer.collect_params().setattr('lr_mult', 10)
 
     def hybrid_forward(self, F, x):
         c3, c4 = self.base_forward(x)
         outputs = []
-        x = self.head(c4)
+        x = self.head(F.concat(c3, c4, dim=1))
         outputs.append(x)
 
         if self.aux:
             auxout = self.auxlayer(c3)
+            auxout = self.pool(auxout)
             outputs.append(auxout)
         return tuple(outputs)
 
@@ -62,7 +64,7 @@ class _DeepLabHead(HybridBlock):
     def __init__(self, nclass, norm_layer=nn.BatchNorm, norm_kwargs={}, **kwargs):
         super(_DeepLabHead, self).__init__()
         with self.name_scope():
-            self.aspp = _ASPP(2048, [3, 6, 18], norm_layer=norm_layer,
+            self.aspp = _ASPP(2048+1024, [3, 6, 18], norm_layer=norm_layer,
                               norm_kwargs=norm_kwargs, **kwargs)
             self.block = nn.HybridSequential()
             self.block.add(nn.Conv2D(in_channels=256, channels=256,

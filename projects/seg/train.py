@@ -148,7 +148,7 @@ class Trainer(object):
         criterion = MixSoftmaxCrossEntropyLoss(args.aux, aux_weight=args.aux_weight)
         self.criterion = DataParallelCriterion(criterion, args.ctx, args.syncbn)
         # optimizer and lr scheduling
-        self.lr_scheduler = LRScheduler(mode='step', baselr=args.lr,
+        self.lr_scheduler = LRScheduler(mode='step', baselr=args.lr, step=(20,),
                                         niters=len(self.train_data),
                                         nepochs=args.epochs)
         kv = mx.kv.create(args.kvstore)

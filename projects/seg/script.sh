@@ -18,11 +18,13 @@ then
         --backbone="resnet50" \
         --dataset="tt100k_region" \
         --dataset_root="${TT100K_ROOT}" \
-        --batch-size=6 \
+        --base-size=520 \
+        --crop-size=480 \
+        --batch-size=4 \
         --workers=8 \
-        --epochs=50 \
-        --resume="weights/tt100k_region_deeplab_resnet50_0010.params" \
-        --start-epoch=11 \
+        --epochs=35 \
+        --resume="weights/tt100k_region_deeplab_resnet50_0025.params" \
+        --start-epoch=26 \
         --lr=1e-3 \
         --momentum=0.9 \
         --weight-decay=1e-5 \
@@ -38,7 +40,8 @@ then
         --backbone="resnet50" \
         --dataset="tt100k_region" \
         --dataset_root="${TT100K_ROOT}" \
-        --resume="weights/tt100k_region_deeplab_resnet50_0010.params" \
+        --crop-size=640 \
+        --resume="weights/tt100k_region_deeplab_resnet50_0020.params" \
         --syncbn \
         --no-val \
         --checkname="resnet101"
