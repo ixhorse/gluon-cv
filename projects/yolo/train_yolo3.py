@@ -334,9 +334,10 @@ if __name__ == '__main__':
         if args.dataset == 'tt100k':
             net = get_model(net_name, pretrained_base=True, num_sync_bn_devices=num_sync_bn_devices,
                             classes=gdata.TT100KDetection.CLASSES)
+            async_net = get_model(net_name, pretrained_base=False, classes=gdata.TT100KDetection.CLASSES)  # used by cpu worker
         else:
             net = get_model(net_name, pretrained_base=True, num_sync_bn_devices=num_sync_bn_devices)
-        async_net = get_model(net_name, pretrained_base=False)  # used by cpu worker
+            async_net = get_model(net_name, pretrained_base=False)  # used by cpu worker
     else:
         if args.dataset == 'tt100k':
             net = get_model(net_name, pretrained_base=True, classes=gdata.TT100KDetection.CLASSES)

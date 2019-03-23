@@ -15,16 +15,16 @@ then
     echo "====train===="
     python train_yolo3.py \
         --network="darknet53" \
-        --batch-size=8 \
+        --batch-size=16 \
         --dataset="tt100k" \
         --dataset_root="${TT100K_ROOT}" \
-        --num-workers=8 \
-        --gpus="0" \
-        --epochs=200 \
+        --num-workers=8\
+        --gpus="0,1" \
+        --epochs=300 \
         --resume="" \
         --start-epoch=0 \
         --lr=1e-3 \
-        --lr-decay-epoch="160,180" \
+        --lr-decay-epoch="250" \
         --momentum=0.9 \
         --wd=5e-4 \
         --val=0 \
@@ -37,21 +37,7 @@ then
         --network="darknet53" \
         --dataset="tt100k" \
         --dataset_root="${TT100K_ROOT}" \
-        --pretrained="weights/yolo3_darknet53_custom_0199.params"
-elif [ 3 == $FLAG ]
-then
-    echo "====eval===="
-    python eval.py \
-        --network="RFB" \
-        --trained_model="weights/VOC.pth" \
-        --voc_root="${VOC_ROOT}" 
-elif [ 3 == $FLAG ]
-then
-    echo "====test 2===="
-    python test_ssd.py \
-        --network="vgg16_atrous" \
-        --dataset="voc" \
-        --dataset_root="${VOC_ROOT}"
+        --pretrained="weights/yolo3_darknet53_custom_0250.params"
 else
     echo "error"
 fi

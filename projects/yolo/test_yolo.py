@@ -98,12 +98,12 @@ def test(net, val_dataset, ctx, classes, size):
     results = dict()
 
     net.collect_params().reset_ctx(ctx)
-    net.set_nms(nms_thresh=0.45, nms_topk=400)
+    net.set_nms(nms_thresh=0.3, nms_topk=50, post_nms=20)
     net.hybridize()
     for idx in tqdm(range(size)):
         im_id = items[idx][1]
         im_fname = os.path.join('{}', 'JPEGImages', '{}.jpg').format(*items[idx])
-        x, img = gdata.transforms.presets.ssd.load_test(im_fname, short=300)
+        x, img = gdata.transforms.presets.yolo.load_test(im_fname)
         ids, scores, bboxes = net(x.copyto(ctx[0]))
 
         ids = ids.astype('int32').asnumpy().squeeze()

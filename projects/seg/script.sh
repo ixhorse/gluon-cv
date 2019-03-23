@@ -41,9 +41,10 @@ then
         --dataset="tt100k_region" \
         --dataset_root="${TT100K_ROOT}" \
         --crop-size=640 \
-        --resume="weights/tt100k_region_deeplab_resnet50_0020.params" \
+        --resume="weights/tt100k_region_deeplab_resnet50_0025.params" \
         --syncbn \
         --no-val \
+        --ngpus=1 \
         --checkname="resnet101"
 fi
 
