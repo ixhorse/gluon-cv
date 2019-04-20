@@ -537,9 +537,9 @@ def yolo3_darknet53_custom(classes, transfer=None, pretrained_base=True, pretrai
             pretrained=pretrained_base, num_sync_bn_devices=num_sync_bn_devices, **kwargs)
         stages = [base_net.features[:15], base_net.features[15:24], base_net.features[24:]]
         anchors = [
-            [10, 13, 16, 30, 33, 23],
-            [30, 61, 62, 45, 59, 119],
-            [116, 90, 156, 198, 373, 326]]
+            [24, 26, 33, 36, 44, 50],
+            [57, 61, 69, 105, 72, 76],
+            [94, 97, 119, 125, 172, 189]]
         strides = [8, 16, 32]
         net = get_yolov3(
             'darknet53', stages, [512, 256, 128], anchors, strides, classes, 'coco',
