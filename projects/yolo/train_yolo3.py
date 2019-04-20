@@ -323,6 +323,7 @@ if __name__ == '__main__':
     # training contexts
     ctx = [mx.gpu(int(i)) for i in args.gpus.split(',') if i.strip()]
     ctx = ctx if ctx else [mx.cpu()]
+    print(ctx)
 
     # network
     net_type = args.dataset if args.dataset in ['voc', 'coco'] else 'custom'

@@ -13,23 +13,24 @@ echo $FLAG
 if [ 1 == $FLAG ] 
 then
     echo "====train===="
-    python train_yolo3.py \
+    MXNET_CUDNN_AUTOTUNE_DEFAULT=0 python train_yolo3.py \
         --network="darknet53" \
-        --batch-size=16 \
+        --batch-size=8 \
         --dataset="tt100k" \
         --dataset_root="${TT100K_ROOT}" \
-        --num-workers=8\
+        --num-workers=8 \
         --gpus="0,1" \
-        --epochs=300 \
+        --epochs=200 \
         --resume="" \
         --start-epoch=0 \
         --lr=1e-3 \
-        --lr-decay-epoch="250" \
+        --lr-decay-epoch="160" \
         --momentum=0.9 \
         --wd=5e-4 \
         --val=0 \
         --warmup-epochs=4 \
-        --syncbn
+        --syncbn \
+	--label-smooth
 elif [ 2 == $FLAG ]
 then
     echo "====test===="
@@ -37,7 +38,7 @@ then
         --network="darknet53" \
         --dataset="tt100k" \
         --dataset_root="${TT100K_ROOT}" \
-        --pretrained="weights/yolo3_darknet53_custom_0250.params"
+        --pretrained="weights/yolo3_darknet53_custom_0199.params"
 else
     echo "error"
 fi

@@ -111,8 +111,8 @@ def test(net, val_dataset, ctx, classes, size):
         scores = scores.asnumpy().squeeze()
         mask = ids > -1
         # pdb.set_trace()
-        # _visdetection(img, bboxes, [classes[i] for i in ids[mask]])
-        # cv2.waitKey(0)
+        _visdetection(img, bboxes, [classes[i] for i in ids[mask]])
+        cv2.waitKey(0)
         results[im_id] = {'pred_box': bboxes[mask],
                            'pred_score': scores[mask],
                            'pred_label': [classes[i] for i in ids[mask]]}
