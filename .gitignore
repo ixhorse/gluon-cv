@@ -1,9 +1,12 @@
 # Extra
 *.params
+*.states
 *.out
 *.swp
 .DS_Store
 .vscode
+*.npy
+*.npz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -115,3 +118,5 @@ ENV/
 # results
 projects/ssd/results
 projects/yolo/results
+*.jpeg*
+.idea/*
