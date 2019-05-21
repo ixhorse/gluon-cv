@@ -15,16 +15,16 @@ then
     echo "====train===="
     python train_yolo3.py \
         --network="darknet53" \
-        --batch-size=8 \
+        --batch-size=2 \
         --dataset="tt100k" \
         --dataset_root="${TT100K_ROOT}" \
-        --num-workers=8 \
+        --num-workers=2 \
         --gpus="0" \
-        --epochs=200 \
+        --epochs=100 \
         --resume="" \
         --start-epoch=0 \
         --lr=1e-3 \
-        --lr-decay-epoch="160,180" \
+        --lr-decay-epoch="80,90" \
         --momentum=0.9 \
         --wd=5e-4 \
         --val=0 \
@@ -37,7 +37,7 @@ then
         --network="darknet53" \
         --dataset="tt100k" \
         --dataset_root="${TT100K_ROOT}" \
-        --pretrained="weights/yolo3_darknet53_custom_0199.params"
+        --pretrained="weights/yolo3_darknet53_custom_0070.params"
 elif [ 3 == $FLAG ]
 then
     echo "====eval===="

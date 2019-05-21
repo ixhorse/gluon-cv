@@ -59,15 +59,7 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 def get_dataset(dataset, data_shape):
-    if dataset.lower() == 'voc':
-        val_dataset = gdata.VOCDetection(root=args.dataset_root, splits=[(2007, 'test')])
-        val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=val_dataset.classes)
-    elif dataset.lower() == 'coco':
-        val_dataset = gdata.COCODetection(splits='instances_val2017', skip_empty=False)
-        val_metric = COCODetectionMetric(
-            val_dataset, args.save_prefix + '_eval', cleanup=True,
-            data_shape=(data_shape, data_shape))
-    elif dataset.lower() == 'tt100k':
+    if dataset.lower() == 'tt100k':
         val_dataset = gdata.TT100KDetection(root=args.dataset_root, splits='test', preload_label=False)
         val_metric = None
     else:
@@ -81,6 +73,7 @@ def _visdetection(image, detections, labels):
         cv2.putText(image, label, (box[0], box[1]), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 1)
     plt.imshow(image)
     plt.show()
+    cv2.waitKey()
 
 def test(net, val_dataset, ctx, classes, size):
     """Test on test dataset."""
@@ -99,10 +92,10 @@ def test(net, val_dataset, ctx, classes, size):
         ids = ids.astype('int32').asnumpy().squeeze()
         bboxes = bboxes.asnumpy().squeeze()
         scores = scores.asnumpy().squeeze()
-        mask = ids > -1
-        # pdb.set_trace()
+        mask = (ids > -1) & (scores > 0.55)
+        
         # _visdetection(img, bboxes, [classes[i] for i in ids[mask]])
-        # cv2.waitKey(0)
+        
         results[im_id] = {'pred_box': bboxes[mask],
                            'pred_score': scores[mask],
                            'pred_label': [classes[i] for i in ids[mask]]}

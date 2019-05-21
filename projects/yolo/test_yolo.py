@@ -103,7 +103,7 @@ def test(net, val_dataset, ctx, classes, size):
     for idx in tqdm(range(size)):
         im_id = items[idx][1]
         im_fname = os.path.join('{}', 'JPEGImages', '{}.jpg').format(*items[idx])
-        x, img = gdata.transforms.presets.ssd.load_test(im_fname, short=300)
+        x, img = gdata.transforms.presets.yolo.load_test(im_fname)
         ids, scores, bboxes = net(x.copyto(ctx[0]))
 
         ids = ids.astype('int32').asnumpy().squeeze()
