@@ -44,6 +44,7 @@ then
         --resume="weights/tt100k_region_deeplab_resnet50_final.params" \
         --syncbn \
         --no-val \
+        --ngpus=1 \
         --checkname="resnet101"
 fi
 
